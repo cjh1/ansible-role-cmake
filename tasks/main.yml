@@ -1,0 +1,38 @@
+---
+- include_vars: ../vars/{{ ansible_distribution }}.yml
+
+- name: Install CMake prerequisite packages
+  become: yes
+  become_user: root
+  package: name={{ item }} state=present
+  with_items: "{{ packages }}"
+  tags:
+    - cmake
+
+- name: Clone CMake
+  git:
+    repo=https://github.com/Kitware/CMake.git
+    version={{cmake_version}}
+    dest={{cmake_path}}/src
+  tags:
+    - cmake
+
+- name: Bootstrap CMake
+  command: ./bootstrap
+    chdir={{cmake_path}}/src
+  tags:
+    - cmake
+
+- name: Build CMake
+  command: make -j{{ ansible_processor_cores }}
+    chdir={{cmake_path}}/src
+  tags:
+    - cmake
+
+- name: Install CMake
+  become: yes
+  become_user: root
+  command: make install
+    chdir={{cmake_path}}/src
+  tags:
+    - cmake
